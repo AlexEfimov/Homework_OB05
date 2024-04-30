@@ -24,8 +24,16 @@ class Player:
         self.image = pygame.image.load(PLAYER_IMAGE)
         self.image = pygame.transform.scale(self.image, (PLAYER_SIZE, PLAYER_SIZE))
         self.rect = self.image.get_rect(topleft=(x, y))
+        self.stamina = 100  # Начальная стамина
 
-#        self.rect = pygame.Rect(x, y, PLAYER_SIZE, PLAYER_SIZE)
+    #        self.rect = pygame.Rect(x, y, PLAYER_SIZE, PLAYER_SIZE)
+    def decrease_stamina(self, amount):
+        self.stamina -= amount
+        if self.stamina <= 0:
+            self.stamina = 0
+            print("Вы проиграли!")
+            pygame.quit()
+            sys.exit()
 
     def move(self, dx, dy):
 #       self.rect.x += dx
@@ -102,18 +110,21 @@ class Game:
             for enemy in self.enemies:
                 enemy.draw(self.screen)
                 if self.player.rect.colliderect(enemy.rect):
-                    print("Вы проиграли!")
-                    pygame.quit()
-                    sys.exit()
+                    self.player.decrease_stamina(20)  # Уменьшение стамины
+                    self.enemies.remove(enemy)
+
+
             for prize in self.prizes[:]:
                 prize.draw(self.screen)
                 if self.player.rect.colliderect(prize.rect):
                     self.prizes.remove(prize)
                     self.prize_count += 1
 
-        # Отображение количества призов
+        # Отображение количества призов и стамины
             prize_text = self.font.render(f'Prizes Collected: {self.prize_count}', True, (255, 255, 255))
             self.screen.blit(prize_text, (10, 10))
+            stamina_text = self.font.render(f'Stamina: {self.player.stamina}', True, (255, 255, 255))
+            self.screen.blit(stamina_text, (10, 50))
 
             if self.prize_count >= TOTAL_PRIZES and self.player.rect.colliderect(pygame.Rect(SCREEN_WIDTH - PLAYER_SIZE, 0, PLAYER_SIZE, PLAYER_SIZE)):
                 goal_reached = True
