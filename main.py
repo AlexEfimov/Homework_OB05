@@ -32,8 +32,8 @@ class Player:
         if self.stamina <= 0:
             self.stamina = 0
             print("Вы проиграли!")
-            pygame.quit()
-            sys.exit()
+            return True
+        return False# Флаг состояния окончания игры
 
     def move(self, dx, dy):
 #       self.rect.x += dx
@@ -75,6 +75,7 @@ class Game:
         self.prizes = []
         self.prize_count = 0
         self.font = pygame.font.Font(None, 36)  # Инициализация шрифта
+        self.game_over = False  # Флаг состояния окончания игры
 
     def run(self):
         goal_reached = False
@@ -95,6 +96,7 @@ class Game:
             if keys[pygame.K_DOWN]:
                 self.player.move(0, 5)
 
+
             # Появление врагов и призов
             if random.randint(0, 50) == 0:
                 x = random.randrange(SCREEN_WIDTH)
@@ -105,20 +107,29 @@ class Game:
                 y = random.randrange(SCREEN_HEIGHT)
                 self.prizes.append(Prize(x, y))
 
-            self.screen.fill((50, 100, 50 ))
-            self.player.draw(self.screen)
-            for enemy in self.enemies:
-                enemy.draw(self.screen)
-                if self.player.rect.colliderect(enemy.rect):
-                    self.player.decrease_stamina(20)  # Уменьшение стамины
-                    self.enemies.remove(enemy)
+            if self.game_over == False:
+
+                self.screen.fill((50, 100, 50 ))
+                self.player.draw(self.screen)
+                for enemy in self.enemies:
+                    enemy.draw(self.screen)
+                    if self.player.rect.colliderect(enemy.rect):
+                        self.enemies.remove(enemy)
+                        if self.player.decrease_stamina(20):  # Уменьшение стамины и проверка на проигрыш
+                            self.game_over = True
 
 
-            for prize in self.prizes[:]:
-                prize.draw(self.screen)
-                if self.player.rect.colliderect(prize.rect):
-                    self.prizes.remove(prize)
-                    self.prize_count += 1
+                for prize in self.prizes[:]:
+                    prize.draw(self.screen)
+                    if self.player.rect.colliderect(prize.rect):
+                        self.prizes.remove(prize)
+                        self.prize_count += 1
+
+            else:
+                self.screen.fill((255, 0, 0))  # Заливка экрана красным
+                game_over_text = self.font.render('GAME OVER!', True, (255, 255, 255))
+                text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+                self.screen.blit(game_over_text, text_rect)
 
         # Отображение количества призов и стамины
             prize_text = self.font.render(f'Prizes Collected: {self.prize_count}', True, (255, 255, 255))
