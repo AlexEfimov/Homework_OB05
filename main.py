@@ -6,7 +6,7 @@ import random
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 PLAYER_SIZE = 50
 ENEMY_SIZE = 30
-PRIZE_SIZE = 20
+PRIZE_SIZE = 30
 PLAYER_COLOR = (0, 128, 255)
 ENEMY_COLOR = (255, 0, 0)
 PRIZE_COLOR = (0, 255, 0)
@@ -15,8 +15,8 @@ TOTAL_PRIZES = 5  # Количество призов, необходимое д
 
 #PLAYER_IMAGE = 'Dark_glassed_smile_01.png'
 PLAYER_IMAGE = 'Cartoon_ant_01.png'
-#ENEMY_IMAGE = 'path/to/enemy_image.png'
-#PRIZE_IMAGE = 'path/to/prize_image.png'
+ENEMY_IMAGE = 'spider-30657_640.png'
+PRIZE_IMAGE = 'strawberry-01.png'
 
 
 class Player:
@@ -53,17 +53,25 @@ class Player:
 
 class Enemy:
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, ENEMY_SIZE, ENEMY_SIZE)
+    #    self.rect = pygame.Rect(x, y, ENEMY_SIZE, ENEMY_SIZE)
+        self.image = pygame.image.load(ENEMY_IMAGE)
+        self.image = pygame.transform.scale(self.image, (ENEMY_SIZE, ENEMY_SIZE))
+        self.rect = self.image.get_rect(topleft=(x, y))
 
     def draw(self, screen):
-        pygame.draw.rect(screen, ENEMY_COLOR, self.rect)
+    #    pygame.draw.rect(screen, ENEMY_COLOR, self.rect)
+        screen.blit(self.image, self.rect)
 
 class Prize:
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, PRIZE_SIZE, PRIZE_SIZE)
+    #    self.rect = pygame.Rect(x, y, PRIZE_SIZE, PRIZE_SIZE)
+        self.image = pygame.image.load(PRIZE_IMAGE)
+        self.image = pygame.transform.scale(self.image, (PRIZE_SIZE, PRIZE_SIZE))
+        self.rect = self.image.get_rect(topleft=(x, y))
 
     def draw(self, screen):
-        pygame.draw.rect(screen, PRIZE_COLOR, self.rect)
+    #    pygame.draw.rect(screen, PRIZE_COLOR, self.rect)
+        screen.blit(self.image, self.rect)
 
 class Game:
     def __init__(self):
@@ -76,6 +84,11 @@ class Game:
         self.prize_count = 0
         self.font = pygame.font.Font(None, 36)  # Инициализация шрифта
         self.game_over = False  # Флаг состояния окончания игры
+        pygame.mixer.init()  # Инициализация микшера
+        pygame.mixer.music.load('space-popcorn-24886.mp3')  # Загрузка фоновой музыки
+        pygame.mixer.music.play(-1)  # Воспроизведение музыки на повторе
+        self.collect_sound = pygame.mixer.Sound('pop-up-something-160353.mp3')
+        self.collision_sound = pygame.mixer.Sound('ahh-2-93961.mp3')
 
     def run(self):
         goal_reached = False
@@ -115,6 +128,7 @@ class Game:
                     enemy.draw(self.screen)
                     if self.player.rect.colliderect(enemy.rect):
                         self.enemies.remove(enemy)
+                        self.collision_sound.play()  # Воспроизведение звука при столкновении
                         if self.player.decrease_stamina(20):  # Уменьшение стамины и проверка на проигрыш
                             self.game_over = True
 
@@ -124,6 +138,7 @@ class Game:
                     if self.player.rect.colliderect(prize.rect):
                         self.prizes.remove(prize)
                         self.prize_count += 1
+                        self.collect_sound.play()  # Воспроизведение звука при сборе
 
             else:
                 self.screen.fill((255, 0, 0))  # Заливка экрана красным
