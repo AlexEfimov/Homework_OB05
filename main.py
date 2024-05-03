@@ -17,6 +17,10 @@ ENEMY_IMAGE = 'IMAGES/Spider_01.png'
 PRIZE_IMAGE = 'IMAGES/strawberry-01.png'
 HEADER_IMAGE = 'IMAGES/wood.png'
 BACKGROUND_IMAGE = 'IMAGES/grass.png'
+DOOR_CLOSED = 'IMAGES/door_closed.png'
+DOOR_OPENED = 'IMAGES/door_opened_01.png'
+DOOR_SIZE = (50, 50)
+DOOR_SOUND = 'SOUNDS/'
 FONT_NAME = 'FONTS/MarkerFelt.ttc'
 FONT_SIZE = 36
 
@@ -68,6 +72,27 @@ class Prize:
         screen.blit(self.image, self.rect)
 
 
+class Door:
+    def __init__(self, door_closed_path, door_opened_path, door_size, x, y):
+        self.closed_image = pygame.image.load(door_closed_path)
+        self.closed_image = pygame.transform.scale(self.closed_image, door_size)
+        self.open_image = pygame.image.load(door_opened_path)
+        self.open_image = pygame.transform.scale(self.open_image, door_size)
+        self.image = self.closed_image  # Изначально дверь закрыта
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.is_open = False
+
+    def open(self):
+        if not self.is_open:  # Проверяем, была ли дверь уже открыта
+            self.image = self.open_image
+            self.is_open = True
+            game.door_open_sound.play()  # Воспроизведение звука открывания двери
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -90,6 +115,8 @@ class Game:
         self.header_bg = pygame.transform.scale(self.header_bg, (SCREEN_WIDTH, EXTRA_HEIGHT))
         self.background_image = pygame.image.load(BACKGROUND_IMAGE)
         self.background_image = pygame.transform.scale(self.background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.door = Door(DOOR_CLOSED, DOOR_OPENED, DOOR_SIZE, SCREEN_WIDTH - 50, 50)  # Позиция двери
+        self.door_open_sound = pygame.mixer.Sound('SOUNDS/wooden-door-creaking-102413.mp3')  # Загрузка звука открывания двери
 
     def restart_game(self):
         self.enemies.clear()
@@ -120,6 +147,7 @@ class Game:
 
             # Отрисовка фонового изображения
             self.screen.blit(self.background_image, (0, EXTRA_HEIGHT))
+            self.door.draw(self.screen)  # Отрисовка двери
             # Появление врагов и призов
             if random.randint(0, 50) == 0:
                 x = random.randrange(SCREEN_WIDTH)
@@ -149,6 +177,8 @@ class Game:
                         self.prize_count += 1
                         self.collect_sound.play()  # Воспроизведение звука при сборе
                         self.score += SCORE_PER_PRIZE
+                        if self.prize_count >= TOTAL_PRIZES and not self.door.is_open:
+                            self.door.open()  # Открываем дверь, если собраны все приз
 
                 # Отображение стамины и очков в верхней панели
                 stamina_text = self.font.render(f'STAMINA: {self.player.stamina}', True, (70, 30, 10))
@@ -156,9 +186,10 @@ class Game:
                 self.screen.blit(stamina_text, (10, 10))  # Размещение немного ниже верхней границы
                 self.screen.blit(score_text, (600, 10))
 
-                if (self.prize_count >= TOTAL_PRIZES and
-                    self.player.rect.colliderect(pygame.Rect(SCREEN_WIDTH - PLAYER_SIZE,
-                                                             EXTRA_HEIGHT, PLAYER_SIZE, PLAYER_SIZE))):
+            #    if (self.prize_count >= TOTAL_PRIZES and
+            #        self.player.rect.colliderect(pygame.Rect(SCREEN_WIDTH - PLAYER_SIZE,
+            #                                                 EXTRA_HEIGHT, PLAYER_SIZE, PLAYER_SIZE))):
+                if self.prize_count >= TOTAL_PRIZES and self.player.rect.colliderect(self.door.rect):
                     self.victory = True
                     self.game_over = True
 
