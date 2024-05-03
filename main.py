@@ -150,12 +150,6 @@ class Game:
                         self.collect_sound.play()  # Воспроизведение звука при сборе
                         self.score += SCORE_PER_PRIZE
 
-    #        else:
-    #            self.screen.fill((255, 0, 0))  # Заливка экрана красным
-    #            game_over_text = self.font.render('GAME OVER!', True, (255, 255, 255))
-    #           text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
-    #            self.screen.blit(game_over_text, text_rect)
-
                 # Отображение стамины и очков в верхней панели
                 stamina_text = self.font.render(f'STAMINA: {self.player.stamina}', True, (70, 30, 10))
                 score_text = self.font.render(f'SCORE: {self.score}', True, (70, 30, 10))
@@ -186,16 +180,12 @@ class Game:
                     self.screen.blit(victory_text, victory_rect)
                     self.screen.blit(score_text, score_rect)
 
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        sys.exit()
-                    elif event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
-                            pygame.quit()
-                            sys.exit()
-                        elif event.key == pygame.K_SPACE:
-                            self.restart_game()  # Функция для рестарта игры
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_ESCAPE]:
+                    pygame.quit()
+                    sys.exit()
+                if keys[pygame.K_SPACE]:
+                    self.restart_game()  # Функция для рестарта игры
 
             pygame.display.flip()
             self.clock.tick(FPS)
