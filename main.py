@@ -80,6 +80,7 @@ class Game:
         self.score = 0
         self.font = pygame.font.Font(FONT_NAME, FONT_SIZE)  # Инициализация шрифта
         self.game_over = False  # Флаг состояния окончания игры
+        self.victory = False  # Флаг победы в игре
         pygame.mixer.init()  # Инициализация микшера
         pygame.mixer.music.load('SOUNDS/space-popcorn-24886.mp3')  # Загрузка фоновой музыки
         pygame.mixer.music.play(-1)  # Воспроизведение музыки на повторе
@@ -90,9 +91,17 @@ class Game:
         self.background_image = pygame.image.load(BACKGROUND_IMAGE)
         self.background_image = pygame.transform.scale(self.background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    def run(self):
-        goal_reached = False
+    def restart_game(self):
+        self.enemies.clear()
+        self.prizes.clear()
+        self.prize_count = 0
+        self.score = 0
+        self.player.stamina = 100
+        self.game_over = False
+        self.victory = False
+        self.player.rect.topleft = (0, SCREEN_HEIGHT - PLAYER_SIZE + EXTRA_HEIGHT)
 
+    def run(self):
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -131,6 +140,7 @@ class Game:
                         self.collision_sound.play()  # Воспроизведение звука при столкновении
                         if self.player.decrease_stamina(20):  # Уменьшение стамины и проверка на проигрыш
                             self.game_over = True
+                            self.victory = False   # Пометить, что игрок проиграл
 
                 for prize in self.prizes[:]:
                     prize.draw(self.screen)
@@ -140,39 +150,52 @@ class Game:
                         self.collect_sound.play()  # Воспроизведение звука при сборе
                         self.score += SCORE_PER_PRIZE
 
-            else:
-                self.screen.fill((255, 0, 0))  # Заливка экрана красным
-                game_over_text = self.font.render('GAME OVER!', True, (255, 255, 255))
-                text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
-                self.screen.blit(game_over_text, text_rect)
+    #        else:
+    #            self.screen.fill((255, 0, 0))  # Заливка экрана красным
+    #            game_over_text = self.font.render('GAME OVER!', True, (255, 255, 255))
+    #           text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
+    #            self.screen.blit(game_over_text, text_rect)
 
                 # Отображение стамины и очков в верхней панели
-            stamina_text = self.font.render(f'STAMINA: {self.player.stamina}', True, (70, 30, 10))
-            score_text = self.font.render(f'SCORE: {self.score}', True, (70, 30, 10))
-            self.screen.blit(stamina_text, (10, 10))  # Размещение немного ниже верхней границы
-            self.screen.blit(score_text, (600, 10))
+                stamina_text = self.font.render(f'STAMINA: {self.player.stamina}', True, (70, 30, 10))
+                score_text = self.font.render(f'SCORE: {self.score}', True, (70, 30, 10))
+                self.screen.blit(stamina_text, (10, 10))  # Размещение немного ниже верхней границы
+                self.screen.blit(score_text, (600, 10))
 
-            if (self.prize_count >= TOTAL_PRIZES and
+                if (self.prize_count >= TOTAL_PRIZES and
                     self.player.rect.colliderect(pygame.Rect(SCREEN_WIDTH - PLAYER_SIZE,
                                                              EXTRA_HEIGHT, PLAYER_SIZE, PLAYER_SIZE))):
-                goal_reached = True
+                    self.victory = True
+                    self.game_over = True
 
-            if goal_reached:
-                self.screen.fill((75, 150, 75))  # Зеленый фон для финального экрана
-                victory_text = self.font.render('Congratulations! Level Completed!', True, (0, 255, 255))
-                score_text = self.font.render(f'Your Score: {self.score}', True, (0, 255, 255))
+            else:
+                if not self.victory:
 
-                # Расположение текста по центру экрана
-                victory_rect = victory_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
-                score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
+                    self.screen.fill((255, 0, 0))  # Заливка экрана красным
+                    game_over_text = self.font.render('GAME OVER!', True, (255, 255, 255))
+                    text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
+                    self.screen.blit(game_over_text, text_rect)
 
-                self.screen.blit(victory_text, victory_rect)
-                self.screen.blit(score_text, score_rect)
+                else:
+                    self.screen.fill((75, 150, 75))  # Зеленый фон для финального экрана
+                    victory_text = self.font.render('Congratulations! Level Completed!', True, (0, 255, 255))
+                    score_text = self.font.render(f'Your Score: {self.score}', True, (0, 255, 255))
+                    # Расположение текста по центру экрана
+                    victory_rect = victory_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+                    score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
+                    self.screen.blit(victory_text, victory_rect)
+                    self.screen.blit(score_text, score_rect)
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit()
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            pygame.quit()
+                            sys.exit()
+                        elif event.key == pygame.K_SPACE:
+                            self.restart_game()  # Функция для рестарта игры
 
             pygame.display.flip()
             self.clock.tick(FPS)
