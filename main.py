@@ -194,8 +194,12 @@ class Game:
                     self.game_over = True
 
             else:
-                if not self.victory:
+                control_text = self.font.render('[Пробел] - продолжить, [ESC] - выйти',
+                                                True, (255, 255, 255))
+                control_rect = control_text.get_rect(
+                    center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 10))  # Размещаем текст внизу экрана
 
+                if not self.victory:
                     self.screen.fill((255, 0, 0))  # Заливка экрана красным
                     game_over_text = self.font.render('GAME OVER!', True, (255, 255, 255))
                     text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
@@ -210,6 +214,8 @@ class Game:
                     score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 10))
                     self.screen.blit(victory_text, victory_rect)
                     self.screen.blit(score_text, score_rect)
+                # Отображение инструкций управления в нижней части экрана
+                self.screen.blit(control_text, control_rect)
 
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_ESCAPE]:
