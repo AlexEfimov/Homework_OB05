@@ -107,7 +107,8 @@ class Door(GameObject):
     def draw(self, screen):
         super().draw(screen)
 
-
+#  Определим абстрактный класс GameScreen, который будет служить базовым для экранов в игре
+#  Игровое поле- Playground, заголовок- Header, экраны завершения игры LostScreen, WinScreen
 class GameScreen(ABC):
     def __init__(self, width, height, bg_image, font_name, font_size, font_color, position):
         self.position = position
